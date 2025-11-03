@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grammar Ambiguity Checker</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    .container {
+      background-color: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      border-radius: 15px;
+      padding: 30px;
+      width: 500px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    h1 {
+      text-align: center;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #dcdcdc;
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin: 10px 0 5px;
+    }
+    textarea, input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      margin-bottom: 15px;
+      font-family: 'Poppins', sans-serif;
+      resize: none;
+    }
+    textarea {
+      height: 100px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background-color: #ffb347;
+      color: #333;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #ffcc33;
+    }
+    .output {
+      margin-top: 15px;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 15px;
+      display: none;
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      font-size: 14px;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Grammar Ambiguity Checker</h1>
+    <p class="subtitle">Enter grammar rules (CFG format) and test strings to check for ambiguity</p>
+
+    <label for="grammarInput">Grammar Rules (CFG Format):</label>
+    <textarea id="grammarInput" placeholder="Example:
+E -> E + E | E * E | id"></textarea>
+
+    <small style="display:block;text-align:center;color:#e0e0e0;margin-bottom:20px;">
+      Use CFG format (example: E -> E + E | E * E | id)
+    </small>
+
+    <label for="testString">Test String:</label>
+    <input type="text" id="testString" placeholder="Example: id + id * id">
+
+    <button onclick="checkGrammar()">Check Ambiguity</button>
+    <p class="loading" id="loading">Analyzing grammar, please wait...</p>
+    <div class="output" id="output"></div>
+  </div>
+
+  <script>
+    async function checkGrammar() {
+      const grammar = document.getElementById("grammarInput").value.trim();
+      const test_string = document.getElementById("testString").value.trim();
+      const outputDiv = document.getElementById("output");
+      const loading = document.getElementById("loading");
+
+      if (!grammar || !test_string) {
+        outputDiv.style.display = "block";
+        outputDiv.innerHTML = "<strong>Please enter both grammar rules and test string.</strong>";
+        return;
+      }
+
+      outputDiv.style.display = "none";
+      loading.style.display = "block";
+
+      try {
+        const response = await fetch("/check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ grammar, test_string })
+        });
+
+        const data = await response.json();
+        loading.style.display = "none";
+        outputDiv.style.display = "block";
+        outputDiv.innerHTML = `
+          <strong>Result:</strong> ${data.message}<br>
+          <strong>Possible Parse Trees:</strong> ${data.parse_tree_count}
+        `;
+      } catch (error) {
+        loading.style.display = "none";
+        outputDiv.style.display = "block";
+        outputDiv.innerHTML = "<strong>Error connecting to server.</strong>";
+      }
+    }
+  </script>
+</body>
+</html>
